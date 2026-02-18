@@ -31,7 +31,7 @@ void common_chat_peg_mapper::map(const common_peg_ast_node & node) {
     }
 
     if (is_content) {
-        result.content = std::string(trim_trailing_space(node.text));
+        result.content = std::string(node.text);
     }
 }
 
