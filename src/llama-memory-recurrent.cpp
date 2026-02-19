@@ -207,6 +207,17 @@ bool llama_memory_recurrent::seq_rm(llama_seq_id seq_id, llama_pos p0, llama_pos
         head = new_head;
     }
 
+    // If all cells are now empty, zero the GPU buffers to prevent stale recurrent
+    // state from being used as the initial zero state for a new conversation.
+    // find_slot() uses rs_z (the first free cell) as the initial state source for
+    // fresh sequences — if that GPU memory holds a prior conversation's state,
+    // the model will process the new prompt with garbage initial conditions.
+    if (used == 0) {
+        for (auto & [_, buf] : ctxs_bufs) {
+            ggml_backend_buffer_clear(buf.get(), 0);
+        }
+    }
+
     return true;
 }
 
