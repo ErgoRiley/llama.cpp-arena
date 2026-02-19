@@ -2747,7 +2747,17 @@ private:
 
                 slot.i_batch = -1;
 
-                common_sampler_accept(slot.smpl.get(), id, true);
+                try {
+                    common_sampler_accept(slot.smpl.get(), id, true);
+                } catch (const std::exception & e) {
+                    // Grammar apply/accept inconsistency: the grammar's apply function
+                    // allowed this token but accept found no valid continuation (empty stacks).
+                    // This is an upstream grammar sampler bug. Disable grammar constraints
+                    // and re-accept the token without grammar so generation can continue.
+                    SRV_WRN("grammar constraint on slot %d token %d: %s - disabling grammar\n", slot.id, id, e.what());
+                    common_sampler_disable_grammar(slot.smpl.get());
+                    common_sampler_accept(slot.smpl.get(), id, false);
+                }
 
                 // here we have synchronized the llama_context (due to the sampling above), so we can do time measurement
                 const int64_t t_current = ggml_time_us();

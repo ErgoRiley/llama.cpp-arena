@@ -370,8 +370,15 @@ void common_sampler_accept(struct common_sampler * gsmpl, llama_token token, boo
     }
 
     llama_sampler_accept(gsmpl->chain, token);
-
     gsmpl->prev.push_back(token);
+}
+
+void common_sampler_disable_grammar(struct common_sampler * gsmpl) {
+    if (!gsmpl || !gsmpl->grmr) {
+        return;
+    }
+    llama_sampler_free(gsmpl->grmr);
+    gsmpl->grmr = nullptr;
 }
 
 void common_sampler_reset(struct common_sampler * gsmpl) {
